@@ -28,7 +28,16 @@ public enum ErrorCode {
 
     // Profile
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Profile Not Found"),
-    PROFILE_DUPLICATION(HttpStatus.CONFLICT, "P002", "Profile Name is Duplicated");
+    PROFILE_DUPLICATION(HttpStatus.CONFLICT, "P002", "Profile Name is Duplicated"),
+    PROFILE_TOKEN_REQUIRED(HttpStatus.UNAUTHORIZED, "P003", "Profile Token is Required"),
+    PROFILE_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "P004", "Profile Token is Invalid"),
+    PROFILE_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "P005", "Profile Token is Expired"),
+
+    // App
+    APP_NOT_FOUND(HttpStatus.NOT_FOUND, "AP001", "App Not Found"),
+    APP_DUPLICATION(HttpStatus.CONFLICT, "AP002", "App Client ID is Duplicated"),
+    APP_CONNECTION_NOT_FOUND(HttpStatus.NOT_FOUND, "AP003", "App Connection Not Found"),
+    APP_STATUS_INVALID(HttpStatus.BAD_REQUEST, "AP004", "App Status is Invalid");
 
     private final HttpStatus status;
     private final String code;

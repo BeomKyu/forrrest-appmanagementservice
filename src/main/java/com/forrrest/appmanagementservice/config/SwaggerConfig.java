@@ -21,8 +21,8 @@ public class SwaggerConfig {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
                 .info(new Info()
-                        .title("Auth Service API")
-                        .description("Auth Service API 명세서")
+                        .title("App Management Service API")
+                        .description("App Management Service API Documentation")
                         .version("1.0.0"));
     }
 }
