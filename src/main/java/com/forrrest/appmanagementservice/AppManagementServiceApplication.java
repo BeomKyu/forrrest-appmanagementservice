@@ -1,4 +1,4 @@
-package com.forrrest.AppManagement;
+package com.forrrest.appmanagementservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
