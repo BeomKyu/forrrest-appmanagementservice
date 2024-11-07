@@ -1,9 +1,10 @@
 package com.forrrest.appmanagementservice.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,11 +20,12 @@ import com.forrrest.appmanagementservice.service.AppConnectionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "App Connection", description = "앱 연결 관리 API")
+@Tag(name = "AppConnection", description = "앱 연결 관리 API")
 @RestController
-@RequestMapping("/connections")
+@RequestMapping("/app-connections")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-token")
 public class AppConnectionController {
@@ -33,31 +35,28 @@ public class AppConnectionController {
     @Operation(summary = "앱 연결")
     @PostMapping
     public ResponseEntity<AppConnectionResponse> connect(
-        @RequestBody AppConnectionRequest request,
-        @AuthenticationPrincipal Long profileId) {
-        return ResponseEntity.ok(appConnectionService.connect(request, profileId));
-    }
-
-    @Operation(summary = "프로필의 연결된 앱 목록 조회")
-    @GetMapping("/profile")
-    public ResponseEntity<List<AppConnectionResponse>> getMyConnections(
-        @AuthenticationPrincipal Long profileId) {
-        return ResponseEntity.ok(appConnectionService.getConnectionsByProfileId(profileId));
-    }
-
-    @Operation(summary = "앱의 연결된 프로필 목록 조회")
-    @GetMapping("/app/{appId}")
-    public ResponseEntity<List<AppConnectionResponse>> getAppConnections(
-        @PathVariable Long appId) {
-        return ResponseEntity.ok(appConnectionService.getConnectionsByAppId(appId));
+        @Valid @RequestBody AppConnectionRequest request) {
+        return ResponseEntity.ok(appConnectionService.connect(request));
     }
 
     @Operation(summary = "앱 연결 해제")
-    @DeleteMapping("/{appId}")
-    public ResponseEntity<Void> disconnect(
-        @PathVariable Long appId,
-        @AuthenticationPrincipal Long profileId) {
-        appConnectionService.disconnect(appId, profileId);
+    @DeleteMapping("/{connectionId}")
+    public ResponseEntity<Void> disconnect(@PathVariable Long connectionId) {
+        appConnectionService.disconnect(connectionId);
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "내가 프로필에 연결한 앱 목록 조회")
+    @GetMapping
+    public ResponseEntity<Page<AppConnectionResponse>> getMyConnectedApps(  // 이름 변경
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(appConnectionService.getMyConnectedApps(pageable));  // 메서드명도 변경
+    }
+
+    @Operation(summary = "앱 연결 상세 조회")
+    @GetMapping("/{connectionId}")
+    public ResponseEntity<AppConnectionResponse> getConnection(@PathVariable Long connectionId) {
+        return ResponseEntity.ok(appConnectionService.getConnection(connectionId));
+    }
+
 }

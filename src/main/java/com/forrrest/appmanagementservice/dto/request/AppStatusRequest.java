@@ -1,5 +1,7 @@
 package com.forrrest.appmanagementservice.dto.request;
 
+import com.forrrest.appmanagementservice.enums.AppStatus;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,12 +10,13 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AppConnectionRequest {
-    @NotNull(message = "앱 ID는 필수입니다")
-    private Long appId;
+public class AppStatusRequest {
+    
+    @NotNull(message = "상태는 필수입니다")
+    private AppStatus status;
 
     @Builder
-    public AppConnectionRequest(Long appId) {
-        this.appId = appId;
+    public AppStatusRequest(AppStatus status) {
+        this.status = status;
     }
 }

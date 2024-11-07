@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.forrrest.appmanagementservice.dto.request.AppUpdateRequest;
 import com.forrrest.appmanagementservice.enums.AppCategory;
 import com.forrrest.appmanagementservice.enums.AppStatus;
 
@@ -62,6 +63,21 @@ public class App extends BaseTimeEntity {
         this.profileId = profileId;
         this.category = category;
         this.clientId = UUID.randomUUID().toString();
+    }
+
+    public void update(AppUpdateRequest request) {
+        if (request.getName() != null) {
+            this.name = request.getName();
+        }
+        if (request.getDescription() != null) {
+            this.description = request.getDescription();
+        }
+        if (request.getPublicKey() != null) {
+            this.publicKey = request.getPublicKey();
+        }
+        if (request.getCategory() != null) {
+            this.category = request.getCategory();
+        }
     }
 
     public void updateStatus(AppStatus status) {
