@@ -22,7 +22,7 @@ public class SwaggerConfig {
                                         .bearerFormat("JWT")))
                 .info(new Info()
                         .title("App Management Service API")
-                        .description("App Management Service API Documentation")
+                        .description("App Management Service API 명세서")
                         .version("1.0.0"));
     }
 }
