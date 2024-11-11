@@ -22,11 +22,9 @@ import com.forrrest.appmanagementservice.dto.request.AppRequest;
 import com.forrrest.appmanagementservice.dto.request.AppSearchRequest;
 import com.forrrest.appmanagementservice.dto.request.AppStatusRequest;
 import com.forrrest.appmanagementservice.dto.request.AppUpdateRequest;
-import com.forrrest.appmanagementservice.dto.response.AppConnectionResponse;
 import com.forrrest.appmanagementservice.dto.response.AppDetailResponse;
 import com.forrrest.appmanagementservice.dto.response.AppResponse;
 import com.forrrest.appmanagementservice.enums.AppCategory;
-import com.forrrest.appmanagementservice.service.AppConnectionService;
 import com.forrrest.appmanagementservice.service.AppService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,7 +41,6 @@ import lombok.RequiredArgsConstructor;
 public class AppController {
 
     private final AppService appService;
-    private final AppConnectionService appConnectionService;
 
     @Operation(summary = "앱 생성")
     @PostMapping
@@ -53,9 +50,9 @@ public class AppController {
     }
 
     @Operation(summary = "앱 상세 조회")
-    @GetMapping("/{id}")
-    public ResponseEntity<AppDetailResponse> getApp(@PathVariable Long id) {
-        return ResponseEntity.ok(appService.getAppDetail(id));
+    @GetMapping("/{appId}")
+    public ResponseEntity<AppDetailResponse> getApp(@PathVariable Long appId) {
+        return ResponseEntity.ok(appService.getAppDetail(appId));
     }
 
     @Operation(summary = "내 앱 목록 조회")
@@ -66,26 +63,26 @@ public class AppController {
     }
 
     @Operation(summary = "앱 정보 수정")
-    @PatchMapping("/{id}")
+    @PatchMapping("/{appId}")
     public ResponseEntity<AppResponse> updateApp(
-        @PathVariable Long id,
+        @PathVariable Long appId,
         @Valid @RequestBody AppUpdateRequest request) {
-        return ResponseEntity.ok(appService.updateApp(id, request));
+        return ResponseEntity.ok(appService.updateApp(appId, request));
     }
 
     @Operation(summary = "앱 삭제")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteApp(@PathVariable Long id) {
-        appService.deleteApp(id);
+    @DeleteMapping("/{appId}")
+    public ResponseEntity<Void> deleteApp(@PathVariable Long appId) {
+        appService.deleteApp(appId);
         return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "앱 상태 변경")
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{appId}/status")
     public ResponseEntity<Void> updateStatus(
-        @PathVariable Long id,
+        @PathVariable Long appId,
         @Valid @RequestBody AppStatusRequest request) {
-        appService.updateStatus(id, request.getStatus());
+        appService.updateStatus(appId, request.getStatus());
         return ResponseEntity.ok().build();
     }
 
@@ -109,13 +106,4 @@ public class AppController {
     public ResponseEntity<List<AppCategory>> getCategories() {
         return ResponseEntity.ok(Arrays.asList(AppCategory.values()));
     }
-
-    @Operation(summary = "앱의 연결된 프로필 목록 조회")
-    @GetMapping("/apps/{appId}")
-    public ResponseEntity<Page<AppConnectionResponse>> getConnectionsByApp(
-        @PathVariable Long appId,
-        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(appConnectionService.getConnectionsByApp(appId, pageable));
-    }
-    
 }

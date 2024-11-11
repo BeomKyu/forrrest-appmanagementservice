@@ -39,3 +39,6 @@ out/
 ### env ###
 #application.yml
 application-local.yml
+
+### cursorignore ###
+.cursorignore

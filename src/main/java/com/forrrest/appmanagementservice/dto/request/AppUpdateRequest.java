@@ -18,15 +18,15 @@ public class AppUpdateRequest {
     @Size(max = 1000, message = "설명은 1000자를 넘을 수 없습니다")
     private String description;
     
-    private String publicKey;
+    private Boolean regenerateClientSecret;
     
     private AppCategory category;
 
     @Builder
-    public AppUpdateRequest(String name, String description, String publicKey, AppCategory category) {
+    public AppUpdateRequest(String name, String description, Boolean regenerateClientSecret, AppCategory category) {
         this.name = name;
         this.description = description;
-        this.publicKey = publicKey;
+        this.regenerateClientSecret = regenerateClientSecret;
         this.category = category;
     }
 }

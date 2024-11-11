@@ -22,25 +22,26 @@ public class AppRequest {
     @Size(max = 1000, message = "설명은 1000자를 넘을 수 없습니다")
     private String description;
     
-    @NotBlank(message = "공개키는 필수입니다")
-    private String publicKey;
+    @NotBlank(message = "리다이렉트 URI는 필수입니다")
+    private String redirectUri;
     
     @NotNull(message = "카테고리는 필수입니다")
     private AppCategory category;
 
     @Builder
-    public AppRequest(String name, String description, String publicKey, AppCategory category) {
+    public AppRequest(String name, String description, String redirectUri, AppCategory category) {
         this.name = name;
         this.description = description;
-        this.publicKey = publicKey;
+        this.redirectUri = redirectUri;
         this.category = category;
     }
 
-    public App toEntity() {
+    public App toEntity(Long profileId) {
         return App.builder()
             .name(name)
             .description(description)
-            .publicKey(publicKey)
+            .redirectUri(redirectUri)
+            .profileId(profileId)
             .category(category)
             .build();
     }

@@ -34,7 +34,7 @@ public class App extends BaseTimeEntity {
     private String clientId;
 
     @Column(nullable = false)
-    private String publicKey;
+    private String clientSecret;
 
     @Column(nullable = false)
     private String redirectUri;
@@ -54,15 +54,15 @@ public class App extends BaseTimeEntity {
     private List<AppConnection> connections = new ArrayList<>();
 
     @Builder
-    public App(String name, String description, String publicKey,
-        String redirectUri, Long profileId, AppCategory category) {
+    public App(String name, String description, String redirectUri, 
+               Long profileId, AppCategory category) {
         this.name = name;
         this.description = description;
-        this.publicKey = publicKey;
         this.redirectUri = redirectUri;
         this.profileId = profileId;
         this.category = category;
         this.clientId = UUID.randomUUID().toString();
+        this.clientSecret = UUID.randomUUID().toString();
     }
 
     public void update(AppUpdateRequest request) {
@@ -72,15 +72,19 @@ public class App extends BaseTimeEntity {
         if (request.getDescription() != null) {
             this.description = request.getDescription();
         }
-        if (request.getPublicKey() != null) {
-            this.publicKey = request.getPublicKey();
-        }
         if (request.getCategory() != null) {
             this.category = request.getCategory();
+        }
+        if (request.getRegenerateClientSecret() != null && request.getRegenerateClientSecret()) {
+            regenerateClientSecret();
         }
     }
 
     public void updateStatus(AppStatus status) {
         this.status = status;
+    }
+
+    public void regenerateClientSecret() {
+        this.clientSecret = UUID.randomUUID().toString();
     }
 }

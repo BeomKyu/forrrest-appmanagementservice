@@ -1,10 +1,5 @@
 package com.forrrest.appmanagementservice.service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.forrrest.appmanagementservice.dto.request.AppRequest;
 import com.forrrest.appmanagementservice.dto.request.AppSearchRequest;
 import com.forrrest.appmanagementservice.dto.request.AppUpdateRequest;
@@ -12,111 +7,110 @@ import com.forrrest.appmanagementservice.dto.response.AppDetailResponse;
 import com.forrrest.appmanagementservice.dto.response.AppResponse;
 import com.forrrest.appmanagementservice.entity.App;
 import com.forrrest.appmanagementservice.enums.AppStatus;
-import com.forrrest.appmanagementservice.exception.CustomException;
-import com.forrrest.appmanagementservice.exception.ErrorCode;
+import com.forrrest.appmanagementservice.exception.AppNotFoundException;
 import com.forrrest.appmanagementservice.repository.AppRepository;
-import com.forrrest.common.security.util.SecurityUtil;
-
+import com.forrrest.appmanagementservice.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AppService {
+
     private final AppRepository appRepository;
-    private final SecurityUtil securityUtil;
 
     @Transactional
     public AppResponse createApp(AppRequest request) {
-        // 앱 이름 중복 체크
-        if (appRepository.existsByName(request.getName())) {
-            throw new CustomException(ErrorCode.APP_ALREADY_EXISTS);
-        }
-
+        Long profileId = SecurityUtils.getCurrentProfileId();
+        
         App app = App.builder()
-            .name(request.getName())
-            .description(request.getDescription())
-            .publicKey(request.getPublicKey())
-            .profileId(securityUtil.getCurrentProfileId())
-            .category(request.getCategory())
-            .build();
+                .name(request.getName())
+                .description(request.getDescription())
+                .redirectUri(request.getRedirectUri())
+                .profileId(profileId)
+                .category(request.getCategory())
+                .build();
 
         return AppResponse.of(appRepository.save(app));
     }
 
-    public AppDetailResponse getAppDetail(Long id) {
-        App app = findAppById(id);
-        validateAppOwner(app);
+    public AppDetailResponse getAppDetail(Long appId) {
+        App app = appRepository.findById(appId)
+                .orElseThrow(() -> new AppNotFoundException("앱을 찾을 수 없습니다."));
+        
+        SecurityUtils.validateAppOwnership(app);
+        
         return AppDetailResponse.of(app);
     }
 
     public Page<AppResponse> getMyApps(Pageable pageable) {
-        return appRepository.findByProfileId(securityUtil.getCurrentProfileId(), pageable)
-            .map(AppResponse::of);
+        Long profileId = SecurityUtils.getCurrentProfileId();
+        return appRepository.findByProfileId(profileId, pageable)
+                .map(AppResponse::of);
     }
 
     @Transactional
-    public AppResponse updateApp(Long id, AppUpdateRequest request) {
-        App app = findAppById(id);
-        validateAppOwner(app);
-
-        // 이름 변경 시 중복 체크
-        if (request.getName() != null && !app.getName().equals(request.getName()) 
-            && appRepository.existsByName(request.getName())) {
-            throw new CustomException(ErrorCode.APP_ALREADY_EXISTS);
-        }
-
+    public AppResponse updateApp(Long appId, AppUpdateRequest request) {
+        App app = appRepository.findById(appId)
+                .orElseThrow(() -> new AppNotFoundException("앱을 찾을 수 없습니다."));
+        
+        SecurityUtils.validateAppOwnership(app);
+        
         app.update(request);
         return AppResponse.of(app);
     }
 
     @Transactional
-    public void deleteApp(Long id) {
-        App app = findAppById(id);
-        validateAppOwner(app);
+    public void deleteApp(Long appId) {
+        App app = appRepository.findById(appId)
+                .orElseThrow(() -> new AppNotFoundException("앱을 찾을 수 없습니다."));
+        
+        SecurityUtils.validateAppOwnership(app);
+        
         appRepository.delete(app);
     }
 
     @Transactional
-    public void updateStatus(Long id, AppStatus status) {
-        App app = findAppById(id);
-        validateAppOwner(app);
+    public void updateStatus(Long appId, AppStatus status) {
+        App app = appRepository.findById(appId)
+                .orElseThrow(() -> new AppNotFoundException("앱을 찾을 수 없습니다."));
+        
+        SecurityUtils.validateAppOwnership(app);
+        
         app.updateStatus(status);
     }
 
     public Page<AppResponse> searchApps(AppSearchRequest request, Pageable pageable) {
-        // 검색 조건에 따른 쿼리 실행
-        // TODO: QueryDSL로 동적 쿼리 구현 필요
-        if (request.getName() != null) {
+        if (request.getName() != null && !request.getName().isEmpty()) {
             return appRepository.findByNameContaining(request.getName(), pageable)
-                .map(AppResponse::of);
+                    .map(AppResponse::of);
         }
+        
         if (request.getCategory() != null) {
+            if (request.getStatus() != null) {
+                return appRepository.findByCategoryAndStatus(request.getCategory(), request.getStatus(), pageable)
+                        .map(AppResponse::of);
+            }
             return appRepository.findByCategory(request.getCategory(), pageable)
-                .map(AppResponse::of);
+                    .map(AppResponse::of);
         }
+        
         if (request.getStatus() != null) {
             return appRepository.findByStatus(request.getStatus(), pageable)
-                .map(AppResponse::of);
+                    .map(AppResponse::of);
         }
-        return appRepository.findAll(pageable).map(AppResponse::of);
+        
+        // 검색 조건이 없는 경우 전체 목록 반환
+        return appRepository.findAll(pageable)
+                .map(AppResponse::of);
     }
 
     public Page<AppResponse> getAllApps(Pageable pageable) {
-        return appRepository.findAll(pageable).map(AppResponse::of);
-    }
-
-    // 유틸리티 메서드
-    private App findAppById(Long id) {
-        return appRepository.findById(id)
-            .orElseThrow(() -> new CustomException(ErrorCode.APP_NOT_FOUND));
-    }
-
-    private void validateAppOwner(App app) {
-        if (!app.getProfileId().equals(securityUtil.getCurrentProfileId())) {
-            throw new CustomException(ErrorCode.NOT_APP_OWNER);
-        }
+        return appRepository.findAll(pageable)
+                .map(AppResponse::of);
     }
 }

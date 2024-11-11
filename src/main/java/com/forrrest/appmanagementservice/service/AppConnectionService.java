@@ -1,102 +1,105 @@
 package com.forrrest.appmanagementservice.service;
 
+import com.forrrest.appmanagementservice.dto.request.AppConnectionRequest;
+import com.forrrest.appmanagementservice.dto.response.AppConnectionResponse;
+import com.forrrest.appmanagementservice.entity.App;
+import com.forrrest.appmanagementservice.entity.AppConnection;
+import com.forrrest.appmanagementservice.enums.AppConnectionStatus;
+import com.forrrest.appmanagementservice.enums.AppStatus;
+import com.forrrest.appmanagementservice.exception.AppNotFoundException;
+import com.forrrest.appmanagementservice.exception.UnauthorizedAccessException;
+import com.forrrest.appmanagementservice.repository.AppConnectionRepository;
+import com.forrrest.appmanagementservice.repository.AppRepository;
+import com.forrrest.appmanagementservice.util.SecurityUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.forrrest.appmanagementservice.dto.request.AppConnectionRequest;
-import com.forrrest.appmanagementservice.dto.response.AppConnectionResponse;
-import com.forrrest.appmanagementservice.entity.App;
-import com.forrrest.appmanagementservice.entity.AppConnection;
-import com.forrrest.appmanagementservice.enums.AppStatus;
-import com.forrrest.appmanagementservice.exception.CustomException;
-import com.forrrest.appmanagementservice.exception.ErrorCode;
-import com.forrrest.appmanagementservice.repository.AppConnectionRepository;
-import com.forrrest.appmanagementservice.repository.AppRepository;
-import com.forrrest.common.security.util.SecurityUtil;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AppConnectionService {
 
-    private final AppConnectionRepository appConnectionRepository;
     private final AppRepository appRepository;
-    private final SecurityUtil securityUtil;
+    private final AppConnectionRepository appConnectionRepository;
 
     @Transactional
     public AppConnectionResponse connect(AppConnectionRequest request) {
-        // 앱 존재 여부 확인
         App app = appRepository.findById(request.getAppId())
-            .orElseThrow(() -> new CustomException(ErrorCode.APP_NOT_FOUND));
+                .orElseThrow(() -> new AppNotFoundException("앱을 찾을 수 없습니다."));
 
-        // 앱 상태 확인
         if (app.getStatus() != AppStatus.ACTIVE) {
-            throw new CustomException(ErrorCode.INVALID_APP_STATUS);
+            throw new IllegalStateException("현재 설치할 수 없는 앱입니다.");
         }
 
-        Long profileId = securityUtil.getCurrentProfileId();
+        Long profileId = SecurityUtils.getCurrentProfileId();
+        String profileName = SecurityUtils.getCurrentProfileName();
 
-        // 이미 연결되어 있는지 확인
         if (appConnectionRepository.existsByAppIdAndProfileId(app.getId(), profileId)) {
-            throw new CustomException(ErrorCode.CONNECTION_ALREADY_EXISTS);
+            throw new IllegalStateException("이미 설치된 앱입니다.");
         }
 
         AppConnection connection = AppConnection.builder()
-            .app(app)
-            .profileId(profileId)
-            .profileName("")
-            .build();
+                .app(app)
+                .profileId(profileId)
+                .profileName(profileName)
+                .status(AppConnectionStatus.CONNECTED)
+                .build();
 
         return AppConnectionResponse.of(appConnectionRepository.save(connection));
     }
 
-    public Page<AppConnectionResponse> getConnectionsByApp(Long appId, Pageable pageable) {
-        // 앱 존재 여부 확인
-        App app = appRepository.findById(appId)
-            .orElseThrow(() -> new CustomException(ErrorCode.APP_NOT_FOUND));
-            
-        // 앱 소유자 확인
-        if (!app.getProfileId().equals(securityUtil.getCurrentProfileId())) {
-            throw new CustomException(ErrorCode.NOT_APP_OWNER);
+    @Transactional
+    public AppConnectionResponse executeApp(Long connectionId) {
+        AppConnection connection = appConnectionRepository.findById(connectionId)
+                .orElseThrow(() -> new IllegalArgumentException("설치된 앱을 찾을 수 없습니다."));
+
+        validateConnectionOwnership(connection);
+
+        if (connection.getApp().getStatus() != AppStatus.ACTIVE) {
+            throw new IllegalStateException("현재 실행할 수 없는 앱입니다.");
         }
 
-        return appConnectionRepository.findByAppId(appId, pageable)
-            .map(AppConnectionResponse::of);
+        if (connection.getStatus() != AppConnectionStatus.CONNECTED) {
+            throw new IllegalStateException("앱을 실행할 수 없는 상태입니다.");
+        }
+
+        connection.updateLastAccessedAt();
+        return AppConnectionResponse.of(connection);
     }
 
     @Transactional
     public void disconnect(Long connectionId) {
-        AppConnection connection = findConnectionById(connectionId);
-        validateConnectionOwner(connection);
+        AppConnection connection = appConnectionRepository.findById(connectionId)
+                .orElseThrow(() -> new IllegalArgumentException("연결을 찾을 수 없습니다."));
+
+        validateConnectionOwnership(connection);
+        
         appConnectionRepository.delete(connection);
     }
 
-    public Page<AppConnectionResponse> getMyConnectedApps(Pageable pageable) {
-        return appConnectionRepository.findByProfileId(securityUtil.getCurrentProfileId(), pageable)
-            .map(AppConnectionResponse::of);
+    public Page<AppConnectionResponse> getMyConnections(Pageable pageable) {
+        Long profileId = SecurityUtils.getCurrentProfileId();
+        return appConnectionRepository.findByProfileId(profileId, pageable)
+                .map(AppConnectionResponse::of);
     }
 
-    public AppConnectionResponse getConnection(Long connectionId) {
-        AppConnection connection = findConnectionById(connectionId);
-        validateConnectionOwner(connection);
-        return AppConnectionResponse.of(connection);
+    public Page<AppConnectionResponse> getConnectionsByApp(Long appId, Pageable pageable) {
+        App app = appRepository.findById(appId)
+                .orElseThrow(() -> new AppNotFoundException("앱을 찾을 수 없습니다."));
+
+        SecurityUtils.validateAppOwnership(app);
+
+        return appConnectionRepository.findByAppId(appId, pageable)
+                .map(AppConnectionResponse::of);
     }
 
-    // 유틸리티 메서드
-    private AppConnection findConnectionById(Long id) {
-        return appConnectionRepository.findById(id)
-            .orElseThrow(() -> new CustomException(ErrorCode.CONNECTION_NOT_FOUND));
-    }
-
-    private void validateConnectionOwner(AppConnection connection) {
-        if (!connection.getProfileId().equals(securityUtil.getCurrentProfileId())) {
-            throw new CustomException(ErrorCode.NOT_CONNECTION_OWNER);
+    private void validateConnectionOwnership(AppConnection connection) {
+        Long currentProfileId = SecurityUtils.getCurrentProfileId();
+        if (!connection.getProfileId().equals(currentProfileId)) {
+            throw new UnauthorizedAccessException("해당 연결에 대한 접근 권한이 없습니다.");
         }
     }
 }

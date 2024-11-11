@@ -39,6 +39,13 @@ public class AppConnectionController {
         return ResponseEntity.ok(appConnectionService.connect(request));
     }
 
+    @Operation(summary = "앱 실행")
+    @PostMapping("/{connectionId}/execute")
+    public ResponseEntity<AppConnectionResponse> executeApp(
+        @PathVariable Long connectionId) {
+        return ResponseEntity.ok(appConnectionService.executeApp(connectionId));
+    }
+
     @Operation(summary = "앱 연결 해제")
     @DeleteMapping("/{connectionId}")
     public ResponseEntity<Void> disconnect(@PathVariable Long connectionId) {
@@ -48,15 +55,16 @@ public class AppConnectionController {
 
     @Operation(summary = "내가 프로필에 연결한 앱 목록 조회")
     @GetMapping
-    public ResponseEntity<Page<AppConnectionResponse>> getMyConnectedApps(  // 이름 변경
+    public ResponseEntity<Page<AppConnectionResponse>> getMyConnections(
         @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(appConnectionService.getMyConnectedApps(pageable));  // 메서드명도 변경
+        return ResponseEntity.ok(appConnectionService.getMyConnections(pageable));
     }
 
-    @Operation(summary = "앱 연결 상세 조회")
-    @GetMapping("/{connectionId}")
-    public ResponseEntity<AppConnectionResponse> getConnection(@PathVariable Long connectionId) {
-        return ResponseEntity.ok(appConnectionService.getConnection(connectionId));
+    @Operation(summary = "앱의 연결 목록 조회")
+    @GetMapping("/by-app/{appId}")
+    public ResponseEntity<Page<AppConnectionResponse>> getConnectionsByApp(
+        @PathVariable Long appId,
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(appConnectionService.getConnectionsByApp(appId, pageable));
     }
-
 }

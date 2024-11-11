@@ -18,11 +18,12 @@ public class AppResponse {
     private String name;
     private String description;
     private String clientId;
+    private String redirectUri;
     private AppCategory category;
     private AppStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long connectionCount;  // 연결된 프로필 수
+    private Long connectionCount;
 
     @Builder
     public AppResponse(App app) {
@@ -30,6 +31,7 @@ public class AppResponse {
         this.name = app.getName();
         this.description = app.getDescription();
         this.clientId = app.getClientId();
+        this.redirectUri = app.getRedirectUri();
         this.category = app.getCategory();
         this.status = app.getStatus();
         this.createdAt = app.getCreatedAt();

@@ -14,7 +14,7 @@ public class ErrorResponse {
     private final String code;
     private final String message;
 
-    public static ResponseEntity<ErrorResponse> toResponseEntity(ErrorCode errorCode) {
+    public static ResponseEntity<ErrorResponse> toResponseEntity(AppErrorCode errorCode) {
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ErrorResponse.builder()
@@ -24,7 +24,7 @@ public class ErrorResponse {
                 );
     }
 
-    public static ResponseEntity<ErrorResponse> toResponseEntity(ErrorCode errorCode, String message) {
+    public static ResponseEntity<ErrorResponse> toResponseEntity(AppErrorCode errorCode, String message) {
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ErrorResponse.builder()

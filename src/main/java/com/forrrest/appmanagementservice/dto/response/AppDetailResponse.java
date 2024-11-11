@@ -20,7 +20,8 @@ public class AppDetailResponse {
     private String name;
     private String description;
     private String clientId;
-    private String publicKey;
+    private String clientSecret;
+    private String redirectUri;
     private AppCategory category;
     private AppStatus status;
     private LocalDateTime createdAt;
@@ -33,7 +34,8 @@ public class AppDetailResponse {
         this.name = app.getName();
         this.description = app.getDescription();
         this.clientId = app.getClientId();
-        this.publicKey = app.getPublicKey();
+        this.clientSecret = app.getClientSecret();
+        this.redirectUri = app.getRedirectUri();
         this.category = app.getCategory();
         this.status = app.getStatus();
         this.createdAt = app.getCreatedAt();

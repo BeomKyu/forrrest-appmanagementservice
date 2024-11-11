@@ -28,9 +28,12 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers("/nonce-tokens/validate").permitAll()
+                .requestMatchers("/apps/**").hasRole("PROFILE")
+                .requestMatchers("/app-connections/**").hasRole("PROFILE")
+                .requestMatchers("/nonce-tokens/**").hasRole("PROFILE")
+                .anyRequest().denyAll()
             )
             .addFilterBefore(profileTokenFilter, UsernamePasswordAuthenticationFilter.class);
         

@@ -2,6 +2,8 @@ package com.forrrest.appmanagementservice.entity;
 
 import java.time.LocalDateTime;
 
+import com.forrrest.appmanagementservice.enums.AppConnectionStatus;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,17 +30,26 @@ public class AppConnection extends BaseTimeEntity {
     @Column(nullable = false)
     private String profileName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AppConnectionStatus status;
+
     private LocalDateTime lastAccessedAt;
 
     @Builder
-    public AppConnection(App app, Long profileId, String profileName) {
+    public AppConnection(App app, Long profileId, String profileName, AppConnectionStatus status) {
         this.app = app;
         this.profileId = profileId;
         this.profileName = profileName;
+        this.status = status;
         this.lastAccessedAt = LocalDateTime.now();
     }
 
     public void updateLastAccessedAt() {
         this.lastAccessedAt = LocalDateTime.now();
+    }
+
+    public void updateStatus(AppConnectionStatus status) {
+        this.status = status;
     }
 }
