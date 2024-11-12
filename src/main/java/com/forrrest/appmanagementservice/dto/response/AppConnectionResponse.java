@@ -17,6 +17,7 @@ public class AppConnectionResponse {
     private Long profileId;
     private String profileName;
     private AppConnectionStatus status;
+    private String redirectUri;
     private LocalDateTime lastAccessedAt;
     private LocalDateTime createdAt;
 
@@ -27,6 +28,7 @@ public class AppConnectionResponse {
         this.profileId = connection.getProfileId();
         this.profileName = connection.getProfileName();
         this.status = connection.getStatus();
+        this.redirectUri = connection.getApp().getRedirectUri();
         this.lastAccessedAt = connection.getLastAccessedAt();
         this.createdAt = connection.getCreatedAt();
     }
