@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DATABASE_HOST:localhost}:${DATABASE_PORT:3306}/${DATABASE_NAME:forrrest_db}
+    username: ${DATABASE_USER:db_user}
+    password: ${DATABASE_PASSWORD:db_password}
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+logging:
+  level:
+    root: info
+    com.forrrest: debug
+
+server:
+  port: ${APP_MANAGEMENT_PORT:8081}
