@@ -26,8 +26,8 @@ token:
 
 security:
   token:
-    user-paths: #/api/users/**,/api/auth/**
-    profile-paths: /apps/**,/app-connections/**,/nonce-tokens/**
+    user-paths: 
+    profile-paths: /apps, /app-connections, /nonce-tokens
     nonce-paths: 
 
 logging:
