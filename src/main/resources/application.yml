@@ -28,7 +28,8 @@ security:
   token:
     user-paths: 
     profile-paths: /apps, /app-connections, /nonce-tokens
-    nonce-paths: 
+    nonce-paths:
+    external-nonce-paths: #/nonce-tokens
 
 logging:
   level:
