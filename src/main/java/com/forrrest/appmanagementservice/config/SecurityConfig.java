@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final ProfileTokenFilter profileTokenFilter;
+    private final ProfileTokenFilter profileTokenFilter1;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("/nonce-tokens/**").hasRole("PROFILE")
                 .anyRequest().denyAll()
             )
-            .addFilterBefore(profileTokenFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(profileTokenFilter1, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }
