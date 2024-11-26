@@ -11,9 +11,8 @@ import lombok.NoArgsConstructor;
 public class NonceTokenValidationRequest {
     @NotBlank(message = "토큰은 필수입니다")
     private String token;
-    
-    @Builder
-    public NonceTokenValidationRequest(String token) {
-        this.token = token;
-    }
+
+    @NotBlank(message = "app client secret 는 필수입니다.")
+    private String clientSecret;
+
 }

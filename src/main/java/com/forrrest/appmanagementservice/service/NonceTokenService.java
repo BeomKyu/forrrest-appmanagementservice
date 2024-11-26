@@ -9,6 +9,7 @@ import com.forrrest.appmanagementservice.entity.NonceToken;
 import com.forrrest.appmanagementservice.exception.AppErrorCode;
 import com.forrrest.appmanagementservice.exception.AppException;
 import com.forrrest.appmanagementservice.repository.AppConnectionRepository;
+import com.forrrest.appmanagementservice.repository.AppRepository;
 import com.forrrest.appmanagementservice.repository.NonceTokenRepository;
 import com.forrrest.appmanagementservice.util.SecurityUtils;
 import com.forrrest.common.security.token.JwtTokenProvider;
@@ -32,6 +33,7 @@ public class NonceTokenService {
 
     private final NonceTokenRepository nonceTokenRepository;
     private final AppConnectionRepository appConnectionRepository;
+    private final AppRepository appRepository;
     private final JwtTokenProvider tokenProvider;
 
     @Value("${token.validity.NONCE}")
@@ -82,6 +84,13 @@ public class NonceTokenService {
         if (!tokenProvider.validateToken(nonceToken.getToken()) || 
             !tokenProvider.validateTokenType(nonceToken.getToken(), TokenType.NONCE)) {
             throw new AppException(AppErrorCode.INVALID_NONCE_TOKEN);
+        }
+
+        // app client secret 검증
+        App app = appRepository.findByClientId((String)tokenProvider.getClaims(nonceToken.getToken()).get("clientId"))
+            .orElseThrow(() -> new AppException(AppErrorCode.APP_NOT_FOUND));
+        if (!app.getClientSecret().equals(request.getClientSecret())) {
+            throw new AppException(AppErrorCode.INVALID_CLIENT_SECRET);
         }
 
         if (nonceToken.isUsed()) {
