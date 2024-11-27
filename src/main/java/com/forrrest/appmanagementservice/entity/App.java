@@ -61,8 +61,8 @@ public class App extends BaseTimeEntity {
         this.redirectUri = redirectUri;
         this.profileId = profileId;
         this.category = category;
-        this.clientId = UUID.randomUUID().toString();
-        this.clientSecret = UUID.randomUUID().toString();
+        regenerateClientId();
+        regenerateClientSecret();
     }
 
     public void update(AppUpdateRequest request) {
@@ -86,5 +86,9 @@ public class App extends BaseTimeEntity {
 
     public void regenerateClientSecret() {
         this.clientSecret = UUID.randomUUID().toString();
+    }
+
+    public void regenerateClientId() {
+        this.clientId = UUID.randomUUID().toString();
     }
 }
