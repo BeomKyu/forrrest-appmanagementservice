@@ -54,12 +54,19 @@ public class NonceTokenService {
         String profileName = SecurityUtils.getCurrentProfileName();
 
         // JWT 토큰 생성을 위한 claims 설정
+
         Map<String, Object> claims = new HashMap<>();
         claims.put("username", profileName);
-        claims.put("roles", List.of("PROFILE"));
         claims.put("clientId", app.getClientId());
         claims.put("connectionId", connection.getId());
         claims.put("redirectUri", app.getRedirectUri());
+
+        try {
+            SecurityUtils.validateAppOwnership(app);
+            claims.put("roles", List.of("PROFILE", "OWNER"));
+        } catch (Exception e){
+            claims.put("roles", List.of("PROFILE"));
+        }
 
         // JWT 논스 토큰 생성
         String token = tokenProvider.createToken(profileId.toString(), TokenType.NONCE, claims);
