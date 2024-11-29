@@ -20,4 +20,4 @@ logging:
     com.forrrest: debug
 
 server:
-  port: ${APP_MANAGEMENT_PORT:8081}
+  port: ${APP_MANAGEMENT_PORT:8082}

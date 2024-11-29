@@ -8,6 +8,7 @@ import com.forrrest.appmanagementservice.entity.AppConnection;
 import com.forrrest.appmanagementservice.entity.NonceToken;
 import com.forrrest.appmanagementservice.exception.AppErrorCode;
 import com.forrrest.appmanagementservice.exception.AppException;
+import com.forrrest.appmanagementservice.exception.UnauthorizedAccessException;
 import com.forrrest.appmanagementservice.repository.AppConnectionRepository;
 import com.forrrest.appmanagementservice.repository.AppRepository;
 import com.forrrest.appmanagementservice.repository.NonceTokenRepository;
@@ -64,7 +65,7 @@ public class NonceTokenService {
         try {
             SecurityUtils.validateAppOwnership(app);
             claims.put("roles", List.of("PROFILE", "OWNER"));
-        } catch (Exception e){
+        } catch (UnauthorizedAccessException e){
             claims.put("roles", List.of("PROFILE"));
         }
 
