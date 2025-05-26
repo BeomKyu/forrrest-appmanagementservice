@@ -49,7 +49,7 @@ public class AppController {
         return ResponseEntity.ok(appService.createApp(request));
     }
 
-    @Operation(summary = "앱 상세 조회")
+    @Operation(summary = "앱 상세 조회", description = "생성자만 사용 가능")
     @GetMapping("/{appId}")
     public ResponseEntity<AppDetailResponse> getApp(@PathVariable Long appId) {
         return ResponseEntity.ok(appService.getAppDetail(appId));
